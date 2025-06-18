@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class UserConfig {
 
-    @Bean
+   /* @Bean
     public UserDetailsService users(PasswordEncoder passwordEncoder) {
         UserDetails user = User.builder()
                 .username("testuser")
@@ -17,6 +17,15 @@ public class UserConfig {
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(user);
-    }
+    }*/
 
+    @Bean
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+        UserDetails user = User.withUsername("admin")
+                .password(passwordEncoder.encode("adminpass"))
+                .roles("ADMIN")
+                .build();
+
+        return new InMemoryUserDetailsManager(user);
+    }
 }

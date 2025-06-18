@@ -1,28 +1,24 @@
 package com.banking.model;
 
-import com.banking.model.enums.AccountType;
+import com.banking.model.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.*;
 import jakarta.persistence.Id;
 
-
-import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "accounts", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"account_number"}),
-        @UniqueConstraint(columnNames = {"customer_id", "type"})
-})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
-public class Account {
+public class Customer {
+
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -30,19 +26,19 @@ public class Account {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", updatable = false, nullable = false)
-    private Customer customer;
+    private String name;
 
-    @Enumerated(EnumType.STRING)
+    @Column(unique = true)
+    private String phone;
+
     @Column(nullable = false)
-    private AccountType type;
+    private String password;
 
-    @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal balance;
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
 
-    @Column(name = "account_number",unique = true, nullable = false)
-    private String accountNumber;
+    private List<Account> accounts;
 
     @CreatedDate
     @Column(updatable = false)

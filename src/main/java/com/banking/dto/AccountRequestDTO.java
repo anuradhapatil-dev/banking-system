@@ -1,6 +1,6 @@
 package com.banking.dto;
 
-import com.banking.model.AccountType;
+import com.banking.model.enums.AccountType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -25,5 +25,7 @@ public class AccountRequestDTO {
 
     @NotNull
     @PositiveOrZero(message = "Balance must be zero or positive")
-    private BigDecimal balance;
+    private BigDecimal initialDeposit;
+
+    private String idempotencyKey;
 }

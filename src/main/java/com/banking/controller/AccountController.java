@@ -1,5 +1,6 @@
 package com.banking.controller;
 
+import com.banking.dto.AccountInfoResponseDTO;
 import com.banking.dto.AccountRequestDTO;
 import com.banking.dto.AccountResponseDTO;
 import com.banking.service.AccountService;
@@ -12,20 +13,22 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
 
-    @PostMapping
-    public ResponseEntity<AccountResponseDTO> createAccount(@Valid @RequestBody AccountRequestDTO requestDTO) {
-        AccountResponseDTO response = accountService.createAccount(requestDTO);
-
-        // Add statusCode and timestamp here if not set inside service
-        response.setStatusCode(HttpStatus.CREATED.value());
-        response.setTimestamp(Instant.now());
-
+    @PostMapping("/accounts")
+    public ResponseEntity<AccountResponseDTO> createAccount(@RequestBody @Valid AccountRequestDTO request) {
+        AccountResponseDTO response = accountService.createAccount(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @GetMapping("/accounts/{accountNumber}")
+    public ResponseEntity<AccountInfoResponseDTO> getAccount(@PathVariable String accountNumber) {
+        AccountInfoResponseDTO accountInfo = accountService.getAccountDetails(accountNumber);
+        return ResponseEntity.ok(accountInfo);
+    }
+
 }

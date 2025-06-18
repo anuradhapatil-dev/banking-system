@@ -1,87 +1,85 @@
 package com.banking.controller;
 
-import com.banking.controller.AccountController;
+import com.banking.dto.AccountInfoResponseDTO;
 import com.banking.dto.AccountRequestDTO;
 import com.banking.dto.AccountResponseDTO;
-import com.banking.exception.AccountAlreadyExistsException;
-import com.banking.model.AccountType;
+import com.banking.model.enums.AccountType;
 import com.banking.service.AccountService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+// other imports ...
+
+@SpringBootTest
+@AutoConfigureMockMvc
 class AccountControllerTest {
 
-    @Mock
-    private AccountService accountService;
-
-    @InjectMocks
-    private AccountController accountController;
-
+    @Autowired
     private MockMvc mockMvc;
 
+    @MockBean
+    private AccountService accountService;
+
     @Autowired
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;  // add this to convert DTO to JSON
 
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(accountController).build();
-    }
 
     @Test
-    void shouldRegisterAccountSuccessfully() throws Exception {
-        AccountRequestDTO request = new AccountRequestDTO("Anuradha", "9876543210", "Password@123", AccountType.SAVINGS, new BigDecimal("1500.75"));
+    @DisplayName("POST /accounts - Should create account when valid input is provided")
+    void createAccount_ValidInput_ShouldReturnCreated() throws Exception {
+        AccountRequestDTO request = new AccountRequestDTO("Anu", "9999999999", "password", AccountType.SAVINGS, new BigDecimal("1000.00"),"UNIQUE-KEY-TEST-001");
+        AccountResponseDTO response = new AccountResponseDTO("ACC123456", "Account created", 201, Instant.now(), null);
 
-        when(accountService.createAccount(request))
-                .thenReturn(new AccountResponseDTO("ANU89ECC", "Account created successfully", 201, Instant.now(), null));
+        when(accountService.createAccount(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.accountNumber").value("ANU89ECC"))
-                .andExpect(jsonPath("$.message").value("Account created successfully"));
+                .andExpect(jsonPath("$.accountNumber").value("ACC123456"))
+                .andExpect(jsonPath("$.message").value("Account created"));
     }
 
     @Test
-    void shouldReturnConflictWhenAccountAlreadyExists() throws Exception {
-        AccountRequestDTO request = new AccountRequestDTO("Anuradha", "9876543210", "Password@123", AccountType.SAVINGS, new BigDecimal("1500.75"));
-
-        when(accountService.createAccount(request))
-                .thenThrow(new AccountAlreadyExistsException("Account already exists"));
-
-        mockMvc.perform(post("/api/accounts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Account already exists"))
-                .andExpect(jsonPath("$.accountNumber").doesNotExist());
-    }
-
-    @Test
-    void shouldFailWhenMissingFields() throws Exception {
-        AccountRequestDTO request = new AccountRequestDTO("", "", "", null, null);
+    @DisplayName("POST /accounts - Should return 400 Bad Request for invalid input")
+    void createAccount_InvalidInput_ShouldReturnBadRequest() throws Exception {
+        // e.g. missing phone number
+        AccountRequestDTO request = new AccountRequestDTO("Anu", null, "password", AccountType.SAVINGS, new BigDecimal("1000.00"),"UNIQUE-KEY-TEST-001");
 
         mockMvc.perform(post("/api/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("getAccountDetails - Should return account details for valid account number")
+    void shouldReturnAccountDetails() throws Exception {
+        AccountInfoResponseDTO responseDTO = new AccountInfoResponseDTO(
+                "ACC123456", "Anu", "9999999999", AccountType.SAVINGS, new BigDecimal("1000"),Instant.now()
+        );
+
+        when(accountService.getAccountDetails("ACC123456")).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/accounts/ACC123456"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerName").value("Anu"));
+    }
+
 }

@@ -1,7 +1,6 @@
 package com.banking.validator;
 
 import com.banking.dto.AccountRequestDTO;
-import com.banking.model.AccountType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,11 +18,11 @@ public class AccountRequestValidator {
         if (request.getType() == null) {
             throw new IllegalArgumentException("Account type is required");
         }
-        if (request.getBalance() == null) {
-            throw new IllegalArgumentException("Balance is required");
+        if (request.getInitialDeposit() == null) {
+            throw new IllegalArgumentException("Initial balance is required");
         }
-        if (request.getBalance().signum() < 0) {
-            throw new IllegalArgumentException("Balance cannot be negative");
+        if (request.getInitialDeposit().signum() < 0) {
+            throw new IllegalArgumentException("Initial balance cannot be negative");
         }
     }
 }

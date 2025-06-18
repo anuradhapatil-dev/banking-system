@@ -1,4 +1,4 @@
-package com.banking.model;
+package com.banking.model.enums;
 
 /**
  * Types of bank accounts supported in the system.
